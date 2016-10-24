@@ -249,6 +249,8 @@ of modern wide display"
   :bind
   ("C-c g" . magit-status)
   ("C-c C-g" . magit-status))
+(setq projectile-completion-system 'ivy)
+(projectile-mode)
 
 ;; * elisp mode
 (use-package elisp-mode
@@ -631,3 +633,17 @@ select one"
     (interactive "p")
     (if (eq arg 4) (spawn-ansi-term)
       (switch-to-term-buffer))))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (counsel-projectile use-package ivy expand-region evil-magit evil-leader evil-avy))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
