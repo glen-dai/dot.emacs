@@ -29,7 +29,7 @@
 ;;     (interactive)
 ;;     (call-interactively 'eval-buffer)
 ;;     (message "Buffer has been evaluated"))
-  
+
 ;; (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
 (add-hook 'emacs-lisp-mode-hook 'enable-outline-for-init-el)
 
@@ -234,10 +234,12 @@ of modern wide display"
 (bind-key* "C-z C-f" 'split-follow-buffer)
 
 (require 'scratch)
-(require 'highlight-global)
-(bind-key "M-\"" 'highlight-frame-toggle)
-(bind-key "M-+" 'clear-highlight-frame)
-(bind-key "C-z r" 'revert-buffer)
+
+(use-package highlight-global
+  :bind
+  ("M-\"" . highlight-frame-toggle)
+  ("M-+" . clear-highlight-frame)
+  ("C-z r" . revert-buffer))
 
 (use-package expand-region
   :bind
@@ -256,7 +258,6 @@ of modern wide display"
     (call-interactively 'eval-buffer)
     (message "Buffer has been evaluated"))
   (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map))
-
 
 ;; * dired
 (use-package dired
@@ -630,4 +631,3 @@ select one"
     (interactive "p")
     (if (eq arg 4) (spawn-ansi-term)
       (switch-to-term-buffer))))
-
