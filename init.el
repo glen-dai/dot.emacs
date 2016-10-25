@@ -28,13 +28,6 @@
 (defsubst hook-into-modes (func &rest modes)
   (dolist (mode-hook modes) (add-hook mode-hook func)))
 
-
-;; (defun do-eval-buffer ()
-;;     (interactive)
-;;     (call-interactively 'eval-buffer)
-;;     (message "Buffer has been evaluated"))
-
-;; (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
 (add-hook 'emacs-lisp-mode-hook 'enable-outline-for-init-el)
 
 (setq user-emacs-directory (expand-file-name "~/.emacs.d/"))
@@ -45,6 +38,14 @@
 
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.milkbox.net/packages/"))
+
+(use-package ivy-mode
+  :bind
+  ("C-c /" . swiper)
+  ("M-x" . counsel-M-x)
+  ("C-C C-r" . ivy-resume)
+  ("C-x C-f" . counsel-find-file))
+
 (ivy-mode)
 
 (use-package outline-minor-mode
