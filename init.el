@@ -25,6 +25,10 @@
     (outline-minor-mode)
     (outline-hide-body)))
 
+(defsubst hook-into-modes (func &rest modes)
+  (dolist (mode-hook modes) (add-hook mode-hook func)))
+
+
 ;; (defun do-eval-buffer ()
 ;;     (interactive)
 ;;     (call-interactively 'eval-buffer)
@@ -307,6 +311,46 @@ of modern wide display"
               (bind-key "J" 'find-name-dired dired-mode-map)
               (bind-key "K" 'find-grep-dired dired-mode-map))))
 
+
+;; * company mode
+(use-package company-mode
+  :init
+  (setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
+  (hook-into-modes #'company-mode 
+                   'emacs-lisp-mode-hook
+                   'c++-mode-hook
+                   'c-mode-hook
+                   'go-mode-hook)
+
+  :config
+  (defun setup-company-mode ()
+    ;; setup faces
+    (custom-set-faces
+     '(company-preview
+       ((t (:foreground "darkgray" :underline t))))
+     '(company-preview-common
+       ((t (:inherit company-preview))))
+     '(company-tooltip
+       ((t (:background "lightgray" :foreground "black"))))
+     '(company-tooltip-selection
+       ((t (:background "steelblue" :foreground "white"))))
+     '(company-tooltip-common
+       ((((type x)) (:inherit company-tooltip :weight bold))
+        (t (:inherit company-tooltip))))
+     '(company-tooltip-common-selection
+       ((((type x)) (:inherit company-tooltip-selection :weight bold))
+        (t (:inherit company-tooltip-selection)))))
+
+    (setq company-tooltip-limit 20)       ; bigger popup window
+    (setq company-idle-delay .3)  ; decrease delay before autocompletion popup shows
+    (setq company-echo-delay 0)   ; remove annoying
+
+    ;; setup completion
+    (define-key company-active-map (kbd "C-n") 'company-select-next)
+    (define-key company-active-map (kbd "C-p") 'company-select-previous))
+
+  (add-hook 'company-mode-hook 'setup-company-mode))
+
 ;; * cc mode
 (add-to-list 'auto-mode-alist '("\\.c+$" . c++-mode))
 (add-to-list 'auto-mode-alist '("\\.h+$" . c++-mode))
@@ -585,6 +629,22 @@ ic ones) declaration and insert current point"
   )
 
 ;; * go mode
+(use-package go-mode
+  :config
+  (add-hook 'go-mode-hook
+            (lambda ()
+              (bind-key "M-." 'godef-jump go-mode-map)
+              (bind-key "C-j" 'newline-and-indent go-mode-map)
+              (bind-key "M-." 'godef-jump go-mode-map)
+              (bind-key "C-j" 'newline-and-indent go-mode-map)
+              (bind-key "C-c C-u" 'go-remove-unused-imports go-mode-map)
+              (bind-key "C-c C-i" 'go-goto-imports go-mode-map)
+              (bind-key "C-c C-r" 'go-remove-unused-imports go-mode-map)
+              (bind-key "C-x 4 ." 'godef-jump-other-window go-mode-map)
+              (add-hook 'before-save-hook #'gofmt-before-save)
+              (set (make-local-variable 'company-backends) '(company-go))
+              (set (make-local-variable 'compile-command) (concat "go build " buffer-file-name))
+              )))
 
 ;; * term
 
@@ -640,7 +700,7 @@ select one"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (counsel-projectile use-package ivy expand-region evil-magit evil-leader evil-avy))))
+    (company-go counsel-projectile use-package ivy expand-region evil-magit evil-leader evil-avy))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
