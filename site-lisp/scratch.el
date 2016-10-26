@@ -75,27 +75,60 @@ the symbol at point."
 (setq rsync-def-cmd "")
 (setq rsync-svr-addr "c2_udpconn_dev_x64")
 
-(defun run-rsync (arg)
-  "Run rsync within emacs, dest dir is /home/glendai"
-  (interactive "p")
-  (let ((file-to-send nil)
-        (svr-addr nil))
-    (setq file-to-send
-          (read-from-minibuffer "file/directory to send: " rsync-def-cmd))
-    (if (eq 4 arg)
-        (progn
-          (setq svr-addr
-            (read-from-minibuffer "addr to send to: " rsync-svr-addr))
-          (setq rsync-svr-addr svr-addr))
-      (setq svr-addr "c2_udpconn_dev_x64"))
-    (call-interactively
-     #'(lambda ()
-         (interactive)
-         (async-shell-command
-          (format
-           "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s root@%s::glendai/"
-           file-to-send svr-addr) "*run-rsync*")))
-    (setq rsync-def-cmd file-to-send)))
+(require 'counsel)
+;;;###autoload
+(defun run-rsync (&optional initial-input)
+  "Rsync file with file/dir choose by counsel`'.
+When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
+  (interactive)
+  (ivy-read "Find file: " 'read-file-name-internal
+            :matcher #'counsel--find-file-matcher
+            :initial-input initial-input
+            :action
+            (lambda (x)
+              (with-ivy-window
+                (let ((find-file-hook (if (and
+                                           counsel-find-file-speedup-remote
+                                           (file-remote-p ivy--directory))
+                                          nil
+                                        find-file-hook)))
+                  (async-shell-command
+                   (format
+                    "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s root@%s::glendai/"
+                    (expand-file-name x ivy--directory) rsync-svr-addr) "*run-rsync*")
+                  ;; (find-file (expand-file-name x ivy--directory))
+                  )))
+            :preselect (when counsel-find-file-at-point
+                         (require 'ffap)
+                         (let ((f (ffap-guesser)))
+                           (when f (expand-file-name f))))
+            :require-match 'confirm-after-completion
+            :history 'file-name-history
+            :keymap counsel-find-file-map
+            :caller 'counsel-find-file))
+
+
+;; (defun run-rsync (arg)
+;;   "Run rsync within emacs, dest dir is /home/glendai"
+;;   (interactive "p")
+;;   (let ((file-to-send nil)
+;;         (svr-addr nil))
+;;     (setq file-to-send
+;;           (read-from-minibuffer "file/directory to send: " rsync-def-cmd))
+;;     (if (eq 4 arg)
+;;         (progn
+;;           (setq svr-addr
+;;                 (read-from-minibuffer "addr to send to: " rsync-svr-addr))
+;;           (setq rsync-svr-addr svr-addr))
+;;       (setq svr-addr "c2_udpconn_dev_x64"))
+;;     (call-interactively
+;;      #'(lambda ()
+;;          (interactive)
+;;          (async-shell-command
+;;           (format
+;;            "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s root@%s::glendai/"
+;;            file-to-send svr-addr) "*run-rsync*")))
+;;     (setq rsync-def-cmd file-to-send)))
 
 (defun save-utf8 ()
   (interactive)
@@ -154,7 +187,7 @@ the symbol at point."
   (save-excursion
     (pop-to-buffer (get-buffer "*svn-diff*"))
     (diff-mode)))
-  
+
 (defalias 'qb 'qdiao-build)
 (defalias 'qr 'qdiao-rsync)
 (defalias 'ms 'make-then-rsync)
