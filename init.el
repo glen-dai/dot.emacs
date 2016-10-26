@@ -254,7 +254,10 @@ of modern wide display"
   :bind
   ("C-c g" . magit-status)
   ("C-c C-g" . magit-status))
-(setq projectile-completion-system 'ivy)
+(use-package projectile-mode
+  :config
+  (setq projectile-completion-system 'ivy)
+  (setq projectile-enable-caching t))
 (projectile-mode)
 (counsel-projectile-on)
 
