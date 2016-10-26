@@ -256,6 +256,7 @@ of modern wide display"
   ("C-c C-g" . magit-status))
 (setq projectile-completion-system 'ivy)
 (projectile-mode)
+(counsel-projectile-on)
 
 ;; * elisp mode
 (use-package elisp-mode
