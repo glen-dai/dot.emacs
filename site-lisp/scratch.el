@@ -50,10 +50,6 @@ the symbol at point."
     (revert-buffer-with-coding-system 'chinese-hz))
    (t (message "No coding system"))))
 
-(bind-key "C-c /" 'isearch-forward-regexp)
-(bind-key "M-(" 'search-current-symbol-or-region)
-(bind-key "M-)" 'search-current-symbol-or-region)
-
 (defun glen-ecs ()
   (interactive)
   (setq flow-control-c-s-replacement ?\035)

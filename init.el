@@ -39,7 +39,10 @@
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.milkbox.net/packages/"))
 
+(require 'use-package)
+(require 'diminish)
 (use-package ivy-mode
+  :diminish ivy-mode
   :bind
   ("C-c /" . swiper)
   ("M-x" . counsel-M-x)
@@ -702,6 +705,15 @@ select one"
     (interactive "p")
     (if (eq arg 4) (spawn-ansi-term)
       (switch-to-term-buffer))))
+;; * postload
+(add-hook 'find-file-hook
+          (lambda ()
+            (diminish 'ivy-mode)
+            (diminish 'outline-minor-mode)
+            (diminish 'visual-line-mode)
+            (diminish 'company-mode)))
+
+;; * auto append
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -716,3 +728,5 @@ select one"
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+
