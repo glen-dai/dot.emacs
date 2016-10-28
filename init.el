@@ -238,6 +238,8 @@ of modern wide display"
 
 (bind-key* "C-z C-f" 'split-follow-buffer)
 
+(bind-key* "C-h u" 'woman)
+
 (require 'scratch)
 
 (use-package highlight-global
@@ -323,7 +325,7 @@ of modern wide display"
 (use-package company-mode
   :init
   (setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
-  (hook-into-modes #'company-mode 
+  (hook-into-modes #'company-mode
                    'emacs-lisp-mode-hook
                    'c++-mode-hook
                    'c-mode-hook
