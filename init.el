@@ -132,7 +132,7 @@
     (mark-whole-buffer)
     (indent-region (region-beginning) (region-end))))
 
-(bind-key* "M-o" 'reformat-buffer)
+(bind-key "M-o" 'reformat-buffer)
 
 (defun show-compilation ()
   (interactive)
@@ -709,6 +709,7 @@ select one"
 (add-hook 'find-file-hook
           (lambda ()
             (diminish 'ivy-mode)
+            (diminish 'abbrev-mode)
             (diminish 'outline-minor-mode)
             (diminish 'visual-line-mode)
             (diminish 'company-mode)))
