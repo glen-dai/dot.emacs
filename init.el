@@ -275,7 +275,9 @@ of modern wide display"
     (interactive)
     (call-interactively 'eval-buffer)
     (message "Buffer has been evaluated"))
-  (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map))
+  (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
+  (bind-key "C-c e c" 'cancel-debug-on-entry)
+  (bind-key "C-c e d" 'debug-on-entry))
 
 ;; * dired
 (use-package dired
@@ -729,5 +731,3 @@ select one"
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-
