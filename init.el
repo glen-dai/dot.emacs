@@ -724,7 +724,7 @@ select one"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (company-go counsel-projectile use-package ivy expand-region evil-magit evil-leader evil-avy))))
+    (ag company-go counsel-projectile use-package ivy expand-region evil-magit evil-leader evil-avy))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
