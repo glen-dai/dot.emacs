@@ -327,7 +327,7 @@ of modern wide display"
 
 
 ;; * company mode
-(use-package company-mode
+(use-package company
   :init
   (setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
   (hook-into-modes #'company-mode
