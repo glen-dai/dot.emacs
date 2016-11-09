@@ -96,6 +96,14 @@
  enable-recursive-minibuffers t
  visible-bell nil)
 
+(cond
+ ((eq window-system 'ns)
+  (progn
+    (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)
+    (setq mac-option-modifier 'super))
+  (setq mac-command-modifier 'meta))
+ (t nil))
+
 (transient-mark-mode t)
 (global-visual-line-mode)               ; word wrap
 (blink-cursor-mode -1)
