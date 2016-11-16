@@ -77,7 +77,7 @@ the symbol at point."
   "Rsync file with file/dir choose by counsel`'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   (interactive)
-  (ivy-read "Local File/Dri: " 'read-file-name-internal
+  (ivy-read "[rsync to remote] Local file/dir: " 'read-file-name-internal
             :matcher #'counsel--find-file-matcher
             :initial-input initial-input
             :action
@@ -88,10 +88,11 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
                                            (file-remote-p ivy--directory))
                                           nil
                                         find-file-hook))
-                      (remote-dir-or-file (read-from-minibuffer "Remote file/dir: ")))
+                      (remote-dir-or-file 
+                       (read-from-minibuffer "[rsync to remote] Remote dir(default /home/glendai): ")))
                   (async-shell-command
                    (format
-                    "RSYNC_PASSWORD=\"conn2.0\" rsync -avz --port=28000 %s glendai@%s::glendai/%s"
+                    "RSYNC_PASSWORD=\"conn2.0\" rsync -avzC --port=28000 %s glendai@%s::glendai/%s"
                     (expand-file-name x ivy--directory) rsync-svr-addr remote-dir-or-file) "*run-rsync*")
                   ;; (find-file (expand-file-name x ivy--directory))
                   )))
@@ -109,54 +110,38 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   "Rsync file with file/dir choose by counsel`'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   (interactive)
-  (ivy-read "Local dir/file: " 'read-file-name-internal
-            :matcher #'counsel--find-file-matcher
-            :initial-input initial-input
-            :action
-            (lambda (x)
-              (with-ivy-window
-                (let ((remote-dir-or-file (read-from-minibuffer "Remote file/dir: "))
-                      (find-file-hook (if (and
-                                           counsel-find-file-speedup-remote
-                                           (file-remote-p ivy--directory))
-                                          nil
-                                        find-file-hook)))
-                  (async-shell-command
-                   (format
-                    "RSYNC_PASSWORD=\"conn2.0\" rsync -avz --port=28000 %s glendai@%s::glendai/%s"
-                    (expand-file-name x ivy--directory) rsync-svr-addr remote-dir-or-file) "*run-rsync*")
-                  ;; (find-file (expand-file-name x ivy--directory))
-                  )))
-            :preselect (when counsel-find-file-at-point
-                         (require 'ffap)
-                         (let ((f (ffap-guesser)))
-                           (when f (expand-file-name f))))
-            :require-match 'confirm-after-completion
-            :history 'file-name-history
-            :keymap counsel-find-file-map
-            :caller 'counsel-find-file))
+  (let ((remote-dir-or-file (read-from-minibuffer "[rsync from remote] Remote file/dir: ")))
+    (ivy-read "[rsync from remote] Local dir/file: " 'read-file-name-internal
+              :matcher #'counsel--find-file-matcher
+              :initial-input initial-input
+              :action
+              (lambda (x)
+                (with-ivy-window
+                  (let ((find-file-hook (if (and
+                                             counsel-find-file-speedup-remote
+                                             (file-remote-p ivy--directory))
+                                            nil
+                                          find-file-hook)))
+                    (async-shell-command
+                     (format
+                      "RSYNC_PASSWORD=\"conn2.0\" rsync -avzC --port=28000 glendai@%s::glendai/%s %s"
+                      rsync-svr-addr remote-dir-or-file (expand-file-name x ivy--directory)) "*run-rsync*")
+                    ;; (find-file (expand-file-name x ivy--directory))
+                    )))
+              :preselect (when counsel-find-file-at-point
+                           (require 'ffap)
+                           (let ((f (ffap-guesser)))
+                             (when f (expand-file-name f))))
+              :require-match 'confirm-after-completion
+              :history 'file-name-history
+              :keymap counsel-find-file-map
+              :caller 'counsel-find-file)))
 
-;; (defun run-rsync (arg)
-;;   "Run rsync within emacs, dest dir is /home/glendai"
-;;   (interactive "p")
-;;   (let ((file-to-send nil)
-;;         (svr-addr nil))
-;;     (setq file-to-send
-;;           (read-from-minibuffer "file/directory to send: " rsync-def-cmd))
-;;     (if (eq 4 arg)
-;;         (progn
-;;           (setq svr-addr
-;;                 (read-from-minibuffer "addr to send to: " rsync-svr-addr))
-;;           (setq rsync-svr-addr svr-addr))
-;;       (setq svr-addr "c2_udpconn_dev_x64"))
-;;     (call-interactively
-;;      #'(lambda ()
-;;          (interactive)
-;;          (async-shell-command
-;;           (format
-;;            "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s root@%s::glendai/"
-;;            file-to-send svr-addr) "*run-rsync*")))
-;;     (setq rsync-def-cmd file-to-send)))
+(defun rsync-cmd (&optional arg)
+  (interactive "p")
+  (if (eq arg 4)
+      (rsync-from-remote)
+    (rsync-to-remote)))
 
 (defun save-utf8 ()
   (interactive)

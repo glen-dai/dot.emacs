@@ -268,6 +268,8 @@ of modern wide display"
 
 (projectile-mode)
 
+(bind-key "M-R" 'rsync-cmd)
+
 ;; * elisp mode
 (use-package elisp-mode
   :config
