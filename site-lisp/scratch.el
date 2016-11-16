@@ -92,7 +92,7 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
                        (read-from-minibuffer "[rsync to remote] Remote dir(default /home/glendai): ")))
                   (async-shell-command
                    (format
-                    "RSYNC_PASSWORD=\"conn2.0\" rsync -avzC --port=28000 %s glendai@%s::glendai/%s"
+                    "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s glendai@%s::glendai/%s "
                     (expand-file-name x ivy--directory) rsync-svr-addr remote-dir-or-file) "*run-rsync*")
                   ;; (find-file (expand-file-name x ivy--directory))
                   )))
@@ -124,7 +124,7 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
                                           find-file-hook)))
                     (async-shell-command
                      (format
-                      "RSYNC_PASSWORD=\"conn2.0\" rsync -avzC --port=28000 glendai@%s::glendai/%s %s"
+                      "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 glendai@%s::glendai/%s %s"
                       rsync-svr-addr remote-dir-or-file (expand-file-name x ivy--directory)) "*run-rsync*")
                     ;; (find-file (expand-file-name x ivy--directory))
                     )))
