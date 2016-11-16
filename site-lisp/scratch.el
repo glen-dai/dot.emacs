@@ -71,6 +71,15 @@ the symbol at point."
 (setq rsync-def-cmd "")
 (setq rsync-svr-addr "c2_udpconn_dev_x64")
 
+(defun glen-normalize-direcotry (dir)
+  " Empty string means failuer"
+  (let ((ndir ""))
+    (when (file-directory-p dir)
+      (setq ndir (expand-file-name dir))
+      (when (string-suffix-p "/" ndir)
+        (setq ndir (substring ndir 0 (- (length ndir) 1)))))
+    ndir))
+
 (require 'counsel)
 ;;;###autoload
 (defun rsync-to-remote (&optional initial-input)
@@ -88,12 +97,15 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
                                            (file-remote-p ivy--directory))
                                           nil
                                         find-file-hook))
+                      (local-file-or-dir (glen-normalize-direcotry (expand-file-name x ivy--directory)))
                       (remote-dir-or-file 
                        (read-from-minibuffer "[rsync to remote] Remote dir(default /home/glendai): ")))
-                  (async-shell-command
-                   (format
-                    "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s glendai@%s::glendai/%s "
-                    (expand-file-name x ivy--directory) rsync-svr-addr remote-dir-or-file) "*run-rsync*")
+                  (if (> (length local-file-or-dir) 0)
+                      (async-shell-command
+                       (format
+                        "RSYNC_PASSWORD=\"conn2.0\" rsync -vzcCrLptgoI --port=28000 %s glendai@%s::glendai/%s "
+                        local-file-or-dir rsync-svr-addr remote-dir-or-file) "*run-rsync*")
+                    (message "Invalidate local file/directory"))
                   ;; (find-file (expand-file-name x ivy--directory))
                   )))
             :preselect (when counsel-find-file-at-point
@@ -110,7 +122,7 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   "Rsync file with file/dir choose by counsel`'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   (interactive)
-  (let ((remote-dir-or-file (read-from-minibuffer "[rsync from remote] Remote file/dir: ")))
+  (let ((remote-dir-or-file (read-from-minibuffer "[rsync from remote] Remote file/dir(dir NOT end with /): ")))
     (ivy-read "[rsync from remote] Local dir/file: " 'read-file-name-internal
               :matcher #'counsel--find-file-matcher
               :initial-input initial-input
