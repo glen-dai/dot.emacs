@@ -71,14 +71,21 @@ the symbol at point."
 (setq rsync-def-cmd "")
 (setq rsync-svr-addr "c2_udpconn_dev_x64")
 
-(defun glen-normalize-direcotry (dir)
-  " Empty string means failuer"
+(defun glen-normalize-filename (dir)
+  "Delete trailing / of dir, otherwise dir stains unchanged"
   (let ((ndir ""))
-    (when (file-directory-p dir)
-      (setq ndir (expand-file-name dir))
-      (when (string-suffix-p "/" ndir)
-        (setq ndir (substring ndir 0 (- (length ndir) 1)))))
+    (if (file-directory-p dir)
+        (progn
+          (setq ndir (expand-file-name dir))
+          (when (string-suffix-p "/" ndir)
+            (setq ndir (substring ndir 0 (- (length ndir) 1)))))
+      (setq ndir dir))
     ndir))
+
+;; (defun glen-compile-rename-buffer ()
+;;   (when (> (length compile-command ) 0)
+;;     (when (not (eq (string-match "rsync -vzcCrlptgoi" compile-command) nil))
+;; ))
 
 (require 'counsel)
 ;;;###autoload
@@ -97,8 +104,8 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
                                            (file-remote-p ivy--directory))
                                           nil
                                         find-file-hook))
-                      (local-file-or-dir (glen-normalize-direcotry (expand-file-name x ivy--directory)))
-                      (remote-dir-or-file 
+                      (local-file-or-dir (glen-normalize-filename (expand-file-name x ivy--directory)))
+                      (remote-dir-or-file
                        (read-from-minibuffer "[rsync to remote] Remote dir(default /home/glendai): ")))
                   (if (> (length local-file-or-dir) 0)
                       (async-shell-command
@@ -216,5 +223,16 @@ When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
 (defalias 'qb 'qdiao-build)
 (defalias 'qr 'qdiao-rsync)
 (defalias 'ms 'make-then-rsync)
+
+(defun qdiao-gopath ()
+  (interactive)
+  (let ((qdiao-gopath "")
+        (root-dir (get-svn-root)))
+    (if (equal root-dir "")
+        (message "not in a svn root")
+      (setq qdiao-gopath (expand-file-name (concat root-dir "/gopath")))
+      (message (format "set go path to '%s'" qdiao-gopath))
+      (setenv "GOPATH" qdiao-gopath))))
+(defalias 'qg 'qdiao-gopath)
 
 (provide 'scratch)

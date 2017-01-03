@@ -64,7 +64,7 @@ Suitable for inclusion in `c-offsets-alist'."
     (c-enable-xemacs-performance-kludge-p . t) ; speed up indentation in XEmacs
     ;; (c-basic-offset . 2)
     (c-basic-offset . 4)
-    (indent-tabs-mode . t)
+    (indent-tabs-mode . nil)
     ;; (indent-tabs-mode . nil)
     (c-comment-only-line-offset . 0)
     (c-hanging-braces-alist . ((defun-open after)

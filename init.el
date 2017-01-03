@@ -41,7 +41,9 @@
 
 (require 'use-package)
 (require 'diminish)
-(use-package ivy-mode
+(use-package ivy
+  :config
+  (setq ivy-use-virtual-buffers t)
   :diminish ivy-mode
   :bind
   ("C-c /" . swiper)
