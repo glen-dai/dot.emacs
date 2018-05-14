@@ -9,7 +9,7 @@
           t)
 
 (require 'package)
-(package-initialize)
+;; (package-initialize)
 (require 'use-package)
 
 (defvar ctl-period-map)
