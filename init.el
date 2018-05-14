@@ -49,17 +49,18 @@
   ("C-c /" . swiper)
   ("M-x" . counsel-M-x)
   ("C-C C-r" . ivy-resume)
-  ("C-x C-f" . counsel-find-file))
+  ("C-x C-f" . counsel-find-file)
+  )
 
 (ivy-mode)
 
-(use-package outline-minor-mode
+(use-package noutline
   :bind
   (("C-c C-c" . outline-toggle-children)
    ("C-c C-n" . outline-next-visible-heading)
    ("C-c C-p" . outline-previous-visible-heading)
-   ("C-c C-b" . outline-hide-body)
-   ("C-c C-a" . outline-show-all)
+   ("C-c C-b" . hide-body)
+   ("C-c C-a" . show-all)
    ("C-c C-p" . outline-previous-visible-heading)))
 
 ;; * global settings
@@ -105,6 +106,9 @@
     (setq mac-option-modifier 'super))
   (setq mac-command-modifier 'meta))
  (t nil))
+
+(setq linum-format "%d ")
+(global-linum-mode)
 
 (transient-mark-mode t)
 (global-visual-line-mode)               ; word wrap
@@ -253,7 +257,7 @@ of modern wide display"
 
 (bind-key* "C-h u" 'woman)
 
-(require 'scratch)
+;; (require 'scratch)
 
 (use-package highlight-global
   :bind
@@ -266,15 +270,15 @@ of modern wide display"
   ("M-M" . er/expand-region))
 
 (use-package magit
-  :bind
-  ("C-c g" . magit-status)
-  ("C-c C-g" . magit-status))
+ :bind
+ ("C-c g" . magit-status)
+ ("C-c C-g" . magit-status))
 
-(use-package projectile-mode
-  :init
-  (counsel-projectile-on)
-  (setq projectile-completion-system 'ivy)
-  (setq projectile-enable-caching t))
+;; (use-package projectile-mode
+;;   :init
+;;   (counsel-projectile-on)
+;;   (setq projectile-completion-system 'ivy)
+;;   (setq projectile-enable-caching t))
 
 (projectile-mode)
 
@@ -285,18 +289,21 @@ of modern wide display"
   (defun my-colorize-compilation-buffer ()
     (when (eq major-mode 'compilation-mode)
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
-    (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
+  (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
+
+
+(hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
 
 ;; * elisp mode
-(use-package elisp-mode
-  :config
-  (defun do-eval-buffer ()
-    (interactive)
-    (call-interactively 'eval-buffer)
-    (message "Buffer has been evaluated"))
-  (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
-  (bind-key "C-c e c" 'cancel-debug-on-entry)
-  (bind-key "C-c e d" 'debug-on-entry))
+;; (use-package elisp-mode
+;;   :config
+;;   (defun do-eval-buffer ()
+;;     (interactive)
+;;     (call-interactively 'eval-buffer)
+;;     (message "Buffer has been evaluated"))
+;;   (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
+;;   (bind-key "C-c e c" 'cancel-debug-on-entry)
+;;   (bind-key "C-c e d" 'debug-on-entry))
 
 ;; * dired
 (use-package dired
@@ -506,6 +513,20 @@ ic ones) declaration and insert current point"
       (setq includes (reverse includes)) ; reverse to get right order
       includes))
 
+  (defun switch-to-header-or-source ()
+    (interactive)
+    (projectile-completing-read
+     "Find file: "
+     (projectile-current-project-files)
+     :initial-input (concat (file-name-base (buffer-file-name))
+                            (if (equal (file-name-extension (buffer-file-name)) "h")
+                                " c"
+                              " h"))
+     :action `(lambda (file)
+                (find-file (expand-file-name file ,(projectile-project-root)))
+                (run-hooks 'projectile-find-file-hook))))
+
+
   (defun c-insert-includes (&optional arg)
     (interactive "p")
     (let ((sym nil)
@@ -645,7 +666,7 @@ ic ones) declaration and insert current point"
               (bind-key "C-c f" 'reformat-function c-mode-base-map)
               (bind-key "C-c c" 'ir-refresh c-mode-base-map)
               (bind-key "M-D" 'c-export-declarations c-mode-base-map)
-              (bind-key "C-c h" 'gtags-jump-between-source-and-header c-mode-base-map)
+              (bind-key "C-c h" 'switch-to-header-or-source c-mode-base-map)
               (bind-key "C-c i" 'c-insert-includes c-mode-base-map)
               (setq-default c-electric-pound-behavior (quote (alignleft)))))
 
@@ -666,6 +687,7 @@ ic ones) declaration and insert current point"
   :config
   (add-hook 'go-mode-hook
             (lambda ()
+              (setq company-go-gocode-command "/home/glendai/goworkspace/bin/gocode")
               (bind-key "M-." 'godef-jump go-mode-map)
               (bind-key "C-j" 'newline-and-indent go-mode-map)
               (bind-key "M-." 'godef-jump go-mode-map)
@@ -725,7 +747,9 @@ select one"
   (defun new-term-or-switch (arg)
     (interactive "p")
     (if (eq arg 4) (spawn-ansi-term)
-      (switch-to-term-buffer))))
+      (switch-to-term-buffer)))
+  (add-hook 'term-mode-hook (lambda () (linum-mode -1))))
+
 ;; * postload
 (add-hook 'find-file-hook
           (lambda ()
@@ -734,19 +758,3 @@ select one"
             (diminish 'outline-minor-mode)
             (diminish 'visual-line-mode)
             (diminish 'company-mode)))
-
-;; * auto append
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (ag company-go counsel-projectile use-package ivy expand-region evil-magit evil-leader evil-avy))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
