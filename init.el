@@ -9,7 +9,7 @@
           t)
 
 (require 'package)
-;; (package-initialize)
+(package-initialize)
 (require 'use-package)
 
 (defvar ctl-period-map)
@@ -183,6 +183,8 @@ found."
                  (point))))
 
 (bind-key "M-z" 'zap-up-to-char)
+(cua-selection-mode t)
+;; (bind-key "C-<cr>" 'cua-rectangle-mark-mode)
 
 
 (use-package align
@@ -294,16 +296,69 @@ of modern wide display"
 
 (hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
 
+;; * ag
+(use-package ag
+  :config
+
+  (require 'which-func)
+  (defun ag-get-func-name (fname line)
+    (interactive)
+    (save-excursion
+      (find-file fname)
+      (goto-line line)
+      ;; (message ">>>>>>fname(%s) dir(%s) line(%d) (%s)" fname default-directory line (which-function))
+      (which-function)))
+
+  (defun ag-add-fun ()
+    (save-excursion
+      (forward-line 0)
+      (let ((end (point))
+            (fname nil)
+            (line nil)
+            (column nil)
+            (func nil)
+            beg)
+
+        (goto-char compilation-filter-start)
+        (forward-line 0)
+        (setq beg (point))
+
+        (goto-char beg)
+        (while (re-search-forward "^File: \\(.*\\)$" end 1)
+          (setq fname (match-string 1))
+          (message "file(%s)" fname)
+          (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" end 1)
+            (setq line (string-to-number (match-string 1)))
+            (setq column (string-to-number (match-string 2)))
+            (goto-char (match-end 0))
+            (setq func (format " %s()  " (ag-get-func-name fname line)))
+            (setq end (+ end (length func)))
+            ;; (message "%s():%d - %s" fname line func)
+            (insert func)
+            )
+          )
+        )
+      )
+    )
+
+  (defun setup-ag-mode-with-hook ()
+    (setq ag-highlight-search t)
+    (add-hook 'compilation-filter-hook 'ag-add-fun t t)
+    ;; (remove-hook 'compilation-filter-hook 'ag-add-fun t)
+    )
+
+  (add-hook 'ag-mode-hook 'setup-ag-mode-with-hook))
+
 ;; * elisp mode
-;; (use-package elisp-mode
-;;   :config
-;;   (defun do-eval-buffer ()
-;;     (interactive)
-;;     (call-interactively 'eval-buffer)
-;;     (message "Buffer has been evaluated"))
-;;   (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
-;;   (bind-key "C-c e c" 'cancel-debug-on-entry)
-;;   (bind-key "C-c e d" 'debug-on-entry))
+(use-package lisp-mode
+  :config
+  (defun do-eval-buffer ()
+    (interactive)
+    (call-interactively 'eval-buffer)
+    (message "Buffer has been evaluated"))
+  (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
+  (bind-key "C-c e c" 'cancel-debug-on-entry)
+  (bind-key "C-c e d" 'debug-on-entry))
 
 ;; * dired
 (use-package dired
@@ -758,3 +813,21 @@ select one"
             (diminish 'outline-minor-mode)
             (diminish 'visual-line-mode)
             (diminish 'company-mode)))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(cmake-mode use-package projectile magit go-eldoc expand-region diminish counsel company ag)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(company-preview ((t (:foreground "darkgray" :underline t))))
+ '(company-preview-common ((t (:inherit company-preview))))
+ '(company-tooltip ((t (:background "lightgray" :foreground "black"))))
+ '(company-tooltip-common ((((type x)) (:inherit company-tooltip :weight bold)) (t (:inherit company-tooltip))))
+ '(company-tooltip-common-selection ((((type x)) (:inherit company-tooltip-selection :weight bold)) (t (:inherit company-tooltip-selection))))
+ '(company-tooltip-selection ((t (:background "steelblue" :foreground "white")))))
