@@ -296,6 +296,7 @@ of modern wide display"
 
 (hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
 
+
 ;; * ag
 (use-package ag
   :config
@@ -306,11 +307,10 @@ of modern wide display"
     (save-excursion
       (find-file fname)
       (goto-line line)
-      ;; (message ">>>>>>fname(%s) dir(%s) line(%d) (%s)" fname default-directory line (which-function))
       (which-function)))
 
   (defun ag-add-fun ()
-    (save-excursion
+    (save-window-excursion
       (forward-line 0)
       (let ((end (point))
             (fname nil)
@@ -326,14 +326,14 @@ of modern wide display"
         (goto-char beg)
         (while (re-search-forward "^File: \\(.*\\)$" end 1)
           (setq fname (match-string 1))
-          (message "file(%s)" fname)
           (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" end 1)
             (setq line (string-to-number (match-string 1)))
             (setq column (string-to-number (match-string 2)))
+
             (goto-char (match-end 0))
             (setq func (format " %s()  " (ag-get-func-name fname line)))
-            (setq end (+ end (length func)))
-            ;; (message "%s():%d - %s" fname line func)
+
+            (setq end (+ end (length func))) ; ajust end
             (insert func)
             )
           )
@@ -341,13 +341,14 @@ of modern wide display"
       )
     )
 
-  (defun setup-ag-mode-with-hook ()
+  (defun setup-ag-mode ()
     (setq ag-highlight-search t)
+    (message "setup-ag-mode .............................")
     (add-hook 'compilation-filter-hook 'ag-add-fun t t)
     ;; (remove-hook 'compilation-filter-hook 'ag-add-fun t)
     )
 
-  (add-hook 'ag-mode-hook 'setup-ag-mode-with-hook))
+  (add-hook 'ag-mode-hook 'setup-ag-mode))
 
 ;; * elisp mode
 (use-package lisp-mode
