@@ -319,13 +319,23 @@ of modern wide display"
       (forward-line 0)
       (let ((end (point))
             (fname nil)
+            (cwd default-directory)
             (fname-set-by-search nil)
-            beg)
+            (opened-file-hash (make-hash-table :test 'equal))
+            (greped-file-hash (make-hash-table :test 'equal))
+            (beg nil))
+
+        ;; create hash of all opened file
+        (mapcar '(lambda (buf) 
+                   (when (buffer-file-name buf)
+                     (puthash (buffer-file-name buf) t opened-file-hash)))
+                (buffer-list))
+
         (goto-char compilation-filter-start)
         (forward-line 0)
         (setq beg (point))
 
-        ;; (message "-----> add-fun start(%d) end(%d)" beg end)
+        ;; (message "-----> add-fun start(%d) end(%d)" beg end) ag/search
 
         (when (not (string-match "^File: .*$" (thing-at-point 'line t)))
           ;; (message "point(%d) line(%s) not a file, search backward ... " (point) (thing-at-point 'line t))
@@ -349,7 +359,16 @@ of modern wide display"
             (setq func (format " %s()  " (ag-get-func-name fname line)))
             (setq end (+ end (length func))) ; ajust end
             ;; (message "%s:%d:%d %s() ..." fname line column func)
+            ;; add all visited hash to greped-file-hash
+            (puthash (expand-file-name (format "%s%s" cwd fname)) t greped-file-hash)
             (insert func)))
+
+        ;; kill buffer that not opened
+        (maphash '(lambda (fname notcared)
+                    (when (not (gethash fname opened-file-hash nil))
+                      (message ">>>>>>>>> file(%s) do not open, close it after ag-search" fname))
+                      (kill-buffer (get-file-buffer fname)))
+                 greped-file-hash)
         ;; (message "     <-end end(%d)" end)
         )
       )
