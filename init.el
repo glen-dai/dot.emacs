@@ -300,76 +300,86 @@ of modern wide display"
 ;; * ag
 (use-package ag
   :config
-  (require 'which-func)
-  (defun ag-get-func-name (fname line)
-    (interactive)
+  (defun ag--get-func-name (fname line)
+    (require 'which-func)
     (save-excursion
       (find-file fname)
       (goto-line line)
       (which-function)))
 
-  (defun ag-get-file-name()
+  (defun ag--get-file-name()
     (let ((line (thing-at-point 'line t)))
       (setq line (replace-regexp-in-string "File: " "" line))
       (setq line (replace-regexp-in-string "\n" "" line))
       line))
 
+  (defun ag-save-opened-files(proc)
+    (when (equal major-mode 'ag-mode)
+      ;; (message "ag-save-opened-files() ........")
+      (mapcar '(lambda (buf)
+                 (when (buffer-file-name buf)
+                   (message "found open file(%s)" (buffer-file-name buf))
+                   (puthash (buffer-file-name buf) t ag-opened-file-hash)))
+              (buffer-list))))
+
+  (defun ag-close-all-tmp-files (buff-not-cared howclosed-not-cared)
+    (when (equal major-mode 'ag-mode)
+      ;; (message "ag-close-all-tmp-files() .....")
+      (mapcar '(lambda (buf)
+                 (let ((bufname (buffer-file-name buf)))
+                   (when bufname
+                     (when (not (gethash (buffer-file-name buf) ag-opened-file-hash nil))
+                       ;; (message "file(%s) open tmply, close it" bufname)
+                       (kill-buffer buf))
+                     )))
+              (buffer-list))
+      )
+    )
+
   (defun ag-add-fun ()
-    (save-window-excursion
-      (forward-line 0)
-      (let ((end (point))
-            (fname nil)
-            (cwd default-directory)
-            (fname-set-by-search nil)
-            (opened-file-hash (make-hash-table :test 'equal))
-            (greped-file-hash (make-hash-table :test 'equal))
-            (beg nil))
-
-        ;; create hash of all opened file
-        (mapcar '(lambda (buf) 
-                   (when (buffer-file-name buf)
-                     (puthash (buffer-file-name buf) t opened-file-hash)))
-                (buffer-list))
-
-        (goto-char compilation-filter-start)
+    (when (equal major-mode 'ag-mode)
+      (save-window-excursion
         (forward-line 0)
-        (setq beg (point))
+        (let ((end (point))
+              (fname nil)
+              (cwd default-directory)
+              (fname-set-by-search nil)
+              (beg nil))
 
-        ;; (message "-----> add-fun start(%d) end(%d)" beg end) ag/search
+          (goto-char compilation-filter-start)
+          (forward-line 0)
+          (setq beg (point))
 
-        (when (not (string-match "^File: .*$" (thing-at-point 'line t)))
-          ;; (message "point(%d) line(%s) not a file, search backward ... " (point) (thing-at-point 'line t))
-          (if (re-search-backward "^File: " (point-min) 1)
-              (progn (setq fname (ag-get-file-name))
-                     ;; (message "search back for file(%s) success" fname)
-                     (setq fname-set-by-search t)
-                     (goto-char beg))
-            (progn
-              (message "!!! BUG: search back for \"File: xxx\" faild, txt(%s), buffer(%s)" (buffer-substring-no-properties beg end) (buffer-substring-no-properties (point-min) (point-max))))))
+          ;; (message "ag-add-fun ........>>>>> beg(%d) end(%d)" beg end)
+          ;; create hash of all opened file
 
-        ;; find other File
-        (while (or fname-set-by-search (re-search-forward "^File: \\(.*\\)$" end 1))
-          (when (not fname-set-by-search) (setq fname (match-string 1)))
-          ;; tell next round search for fname
-          (when fname-set-by-search (setq fname-set-by-search nil))
-          (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" end 1)
-            (setq line (string-to-number (match-string 1)))
-            (setq column (string-to-number (match-string 2)))
-            (goto-char (match-end 0))
-            (setq func (format " %s()  " (ag-get-func-name fname line)))
-            (setq end (+ end (length func))) ; ajust end
-            ;; (message "%s:%d:%d %s() ..." fname line column func)
-            ;; add all visited hash to greped-file-hash
-            (puthash (expand-file-name (format "%s%s" cwd fname)) t greped-file-hash)
-            (insert func)))
+          ;; (message "-----> add-fun start(%d) end(%d)" beg end) ag/search
 
-        ;; kill buffer that not opened
-        (maphash '(lambda (fname notcared)
-                    (when (not (gethash fname opened-file-hash nil))
-                      (message ">>>>>>>>> file(%s) do not open, close it after ag-search" fname))
-                      (kill-buffer (get-file-buffer fname)))
-                 greped-file-hash)
-        ;; (message "     <-end end(%d)" end)
+          (when (not (string-match "^File: .*$" (thing-at-point 'line t)))
+            ;; (message "point(%d) line(%s) not a file, search backward ... " (point) (thing-at-point 'line t))
+            (if (re-search-backward "^File: " (point-min) 1)
+                (progn (setq fname (ag--get-file-name))
+                       ;; (message "search back for file(%s) success" fname)
+                       (setq fname-set-by-search t)
+                       (goto-char beg))
+              (progn
+                (message "!!! BUG: search back for \"File: xxx\" faild, txt(%s), buffer(%s)" (buffer-substring-no-properties beg end) (buffer-substring-no-properties (point-min) (point-max))))))
+
+          ;; find other File
+          (while (or fname-set-by-search (re-search-forward "^File: \\(.*\\)$" end 1))
+            (when (not fname-set-by-search) (setq fname (match-string 1)))
+            ;; tell next round search for fname
+            (when fname-set-by-search (setq fname-set-by-search nil))
+            (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" end 1)
+              (setq line (string-to-number (match-string 1)))
+              (setq column (string-to-number (match-string 2)))
+              (goto-char (match-end 0))
+              (setq func (format " %s()  " (ag--get-func-name fname line)))
+              (setq end (+ end (length func))) ; ajust end
+              ;; (message "%s:%d:%d %s() ..." fname line column func)
+              (insert func)))
+          ;; (message "     <-end end(%d)" end)
+          )
         )
       )
     )
@@ -379,6 +389,11 @@ of modern wide display"
     (message "setup-ag-mode ...............+++++.")
     (add-hook 'compilation-filter-hook 'ag-add-fun t t)
     ;; (remove-hook 'compilation-filter-hook 'ag-add-fun t)
+
+    (setq ag-opened-file-hash (make-hash-table :test 'equal))
+    (make-variable-buffer-local 'ag-opened-file-hash)
+    (add-hook 'compilation-start-hook 'ag-save-opened-files t t)
+    (add-hook 'compilation-finish-functions 'ag-close-all-tmp-files t t)
     )
 
   (add-hook 'ag-mode-hook 'setup-ag-mode))
