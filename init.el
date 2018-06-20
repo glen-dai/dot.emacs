@@ -344,45 +344,62 @@ of modern wide display"
               (fname nil)
               (cwd default-directory)
               (fname-set-by-search nil)
+              (cur-point nil)
               (beg nil))
 
           (goto-char compilation-filter-start)
           (forward-line 0)
           (setq beg (point))
 
-          ;; (message "ag-add-fun ........>>>>> beg(%d) end(%d)" beg end)
+          ;; (message "ag-add-fun ........>>>>> beg(%d) end(%d), buf\n------\n%s\n-------"
+          ;;          beg end (buffer-substring-no-properties beg end))
           ;; create hash of all opened file
 
           ;; (message "-----> add-fun start(%d) end(%d)" beg end) ag/search
 
           (when (not (string-match "^File: .*$" (thing-at-point 'line t)))
-            ;; (message "point(%d) line(%s) not a file, search backward ... " (point) (thing-at-point 'line t))
+            ;; (message "point(%d) line(%s) not a file, search backward ... "
+            ;;          (point) (thing-at-point 'line t))
+
             (if (re-search-backward "^File: " (point-min) 1)
                 (progn (setq fname (ag--get-file-name))
                        ;; (message "search back for file(%s) success" fname)
                        (setq fname-set-by-search t)
                        (goto-char beg))
               (progn
-                (message "!!! BUG: search back for \"File: xxx\" faild, txt(%s), buffer(%s)" (buffer-substring-no-properties beg end) (buffer-substring-no-properties (point-min) (point-max))))))
+                ;; (message "!!! BUG: search back for \"File: xxx\" faild, txt(%s), buffer(%s)"
+                ;;          (buffer-substring-no-properties beg end)
+                ;;          (buffer-substring-no-properties (point-min) (point-max)))
+                )))
 
           ;; find other File
           (while (or fname-set-by-search (re-search-forward "^File: \\(.*\\)$" end 1))
             (when (not fname-set-by-search) (setq fname (match-string 1)))
             ;; tell next round search for fname
             (when fname-set-by-search (setq fname-set-by-search nil))
-            (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" end 1)
-              (setq line (string-to-number (match-string 1)))
-              (setq column (string-to-number (match-string 2)))
-              (goto-char (match-end 0))
-              (setq func (format " %s()  " (ag--get-func-name fname line)))
-              (setq end (+ end (length func))) ; ajust end
-              ;; (message "%s:%d:%d %s() ..." fname line column func)
-              (insert func)))
+
+            (setq cur-point (point))
+
+            (let ((file-end end))
+              (when (re-search-forward "^File: \\(.*\\)$" end 1)
+                ;; (message "    found a new File at(%d), line(%s)" (point) (thing-at-point 'line t))
+                (goto-char (match-beginning 0))
+                (setq file-end (point)))
+
+	      (goto-char cur-point)
+              (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" file-end 1)
+                (setq line (string-to-number (match-string 1)))
+                (setq column (string-to-number (match-string 2)))
+                (goto-char (match-end 0))
+                (setq func (format " %s()  " (ag--get-func-name fname line)))
+                (setq end (+ end (length func))) ; ajust end
+                ;; (message "%s:%d:%d %s ..." fname line column func)
+                (insert func))
+              ))
+
           ;; (message "     <-end end(%d)" end)
-          )
-        )
-      )
-    )
+          ))))
+
 
   (defun setup-ag-mode ()
     (setq ag-highlight-search t)
