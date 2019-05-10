@@ -30,6 +30,13 @@
 
 (add-hook 'emacs-lisp-mode-hook 'enable-outline-for-init-el)
 
+(defun reload-major-mode ()
+  (interactive)
+  (setq old-mode major-mode)
+  (text-mode)
+  (call-interactively old-mode)
+  (message "revert major mode done ..."))
+
 (setq user-emacs-directory (expand-file-name "~/.emacs.d/"))
 (add-to-list 'load-path "~/.emacs.d/setup")
 (add-to-list 'load-path "~/.emacs.d/lisp")
@@ -103,12 +110,12 @@
  ((eq window-system 'ns)
   (progn
     (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)
-    (setq mac-option-modifier 'super))
-  (setq mac-command-modifier 'meta))
+    (setq mac-option-modifier 'super)
+    (setq mac-command-modifier 'meta)))
  (t nil))
 
 (setq linum-format "%d ")
-;; (global-linum-mode)
+;; (global-linum-mode -1)
 
 (transient-mark-mode t)
 (global-visual-line-mode)               ; word wrap
@@ -156,6 +163,7 @@
 (set-register ?. '(file . "~/.emacs.d/init.el")) ; use C-x r j e to open init.el
 (set-register ?, '(file . "~/.emacs.d/"))
 (set-register ?s '(file . "~/.emacs.d/site-lisp/scratch.el"))
+(set-register ?o '(file . "~/org/index.org"))
 
 (bind-key "M-N" 'next-error)
 (bind-key "M-P" 'previous-error)
@@ -386,7 +394,7 @@ of modern wide display"
                 (goto-char (match-beginning 0))
                 (setq file-end (point)))
 
-	      (goto-char cur-point)
+              (goto-char cur-point)
               (while (re-search-forward "^\\([0-9]+\\):\\([0-9]+\\):" file-end 1)
                 (setq line (string-to-number (match-string 1)))
                 (setq column (string-to-number (match-string 2)))
@@ -404,7 +412,7 @@ of modern wide display"
   (defun setup-ag-mode ()
     (setq ag-highlight-search t)
     (message "setup-ag-mode ...............+++++.")
-    (add-hook 'compilation-filter-hook 'ag-add-fun t t)
+    ;; (add-hook 'compilation-filter-hook 'ag-add-fun t t)
     ;; (remove-hook 'compilation-filter-hook 'ag-add-fun t)
 
     (setq ag-opened-file-hash (make-hash-table :test 'equal))
@@ -424,6 +432,7 @@ of modern wide display"
     (message "Buffer has been evaluated"))
   (bind-key "C-c e b" 'do-eval-buffer emacs-lisp-mode-map)
   (bind-key "C-c e c" 'cancel-debug-on-entry)
+  (bind-key "C-j" 'newline-and-indent)
   (bind-key "C-c e d" 'debug-on-entry))
 
 ;; * dired
@@ -808,7 +817,7 @@ ic ones) declaration and insert current point"
   :config
   (add-hook 'go-mode-hook
             (lambda ()
-              (setq company-go-gocode-command "/home/glendai/goworkspace/bin/gocode")
+              ;; (setq company-go-gocode-command "/home/glendai/goworkspace/bin/gocode")
               (bind-key "M-." 'godef-jump go-mode-map)
               (bind-key "C-j" 'newline-and-indent go-mode-map)
               (bind-key "M-." 'godef-jump go-mode-map)
@@ -871,6 +880,18 @@ select one"
       (switch-to-term-buffer)))
   (add-hook 'term-mode-hook (lambda () (linum-mode -1))))
 
+;; * org
+(use-package org
+  :config
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (bind-key* "C-c l" 'org-store-link)
+              (bind-key* "C-c c" 'org-capture)
+              (bind-key* "C-c a" 'org-agenda)
+              (bind-key* "C-c b" 'org-switchb)
+              ;; (org-bullets-mode)
+              )))
+
 ;; * postload
 (add-hook 'find-file-hook
           (lambda ()
@@ -885,7 +906,8 @@ select one"
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(cmake-mode use-package projectile magit go-eldoc expand-region diminish counsel company ag)))
+   (quote
+    (org-bullets company-go cmake-mode use-package projectile magit go-eldoc expand-region diminish counsel company ag))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
