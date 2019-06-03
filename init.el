@@ -111,6 +111,7 @@
   (progn
     (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)
     (setq mac-option-modifier 'super)
+    (setq mac-function-modifier 'control)
     (setq mac-command-modifier 'meta)))
  (t nil))
 
@@ -883,6 +884,38 @@ select one"
 ;; * org
 (use-package org
   :config
+  ;; todo stuff
+  (setq org-enforce-todo-checkbox-dependencies t)
+  (setq org-enforce-todo-dependencies t)
+  (setq org-todo-keyword-faces
+        '(("TODO" . org-warning)
+          ("STARTED" . "yellow")
+          ("DONE" . org-done)
+          ("CANCELED" . (:foreground "blue" :weight bold))
+          ("WAITED" . org-scheduled)
+          ))
+
+  (setq org-todo-keywords
+        '((sequence
+           "TODO(t)"
+           "STARTED(s)"
+           "WAITED(w@/!)"               ; / leaving also record timestamp
+           "|"
+           "DONE(d!)"                   ; ! for timestamp
+           "CANCELED(c@)"               ; @ for note with timestamp
+           )))
+
+  ;; progress logging
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t) ; use drawer as state chagne note instead of list item 
+
+  ;; Automatically change to DONE when all children are done
+  (defun org-summary-todo (n-done n-not-done)
+    "Switch entry to DONE when all subentries are done, to TODO otherwise."
+    (let (org-log-done org-log-states)   ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+  (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+  
   (add-hook 'org-mode-hook
             (lambda ()
               (bind-key* "C-c l" 'org-store-link)
