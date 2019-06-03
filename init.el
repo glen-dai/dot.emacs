@@ -1,4 +1,26 @@
 ;; * prelude
+(require 'package)
+(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+                    (not (gnutls-available-p))))
+       (proto (if no-ssl "http" "https")))
+  (when no-ssl
+    (warn "\
+Your version of Emacs does not support SSL connections,
+which is unsafe because it allows man-in-the-middle attacks.
+There are two things you can do about this warning:
+1. Install an Emacs version that does support SSL and be safe.
+2. Remove this warning from your init file so you won't see it again."))
+  ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
+  (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+  ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+  (when (< emacs-major-version 24)
+    ;; For important compatibility libraries like cl-lib
+    (add-to-list 'package-archives (cons "gnu" (concat proto "://elpa.gnu.org/packages/")))))
+
+(package-initialize)
+(add-to-list 'package-archives
+             '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
 (defconst emacs-start-time (current-time))
 (add-hook 'after-init-hook
           `(lambda ()
@@ -8,8 +30,7 @@
                         ,load-file-name elapsed)))
           t)
 
-(require 'package)
-(package-initialize)
+
 (require 'use-package)
 
 (defvar ctl-period-map)
@@ -43,10 +64,6 @@
 (add-to-list 'load-path "~/.emacs.d/defuns")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.milkbox.net/packages/"))
-
-(require 'use-package)
 (require 'diminish)
 (use-package ivy
   :config
@@ -110,6 +127,8 @@
  ((eq window-system 'ns)
   (progn
     (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)
+    (when (display-graphic-p)
+      (set-face-attribute 'default nil :family "Menlo" :height 140 :weight 'bold))
     (setq mac-option-modifier 'super)
     (setq mac-function-modifier 'control)
     (setq mac-command-modifier 'meta)))
@@ -285,11 +304,13 @@ of modern wide display"
   ("C-c g" . magit-status)
   ("C-c C-g" . magit-status))
 
-;; (use-package projectile-mode
-;;   :init
-;;   (counsel-projectile-on)
-;;   (setq projectile-completion-system 'ivy)
-;;   (setq projectile-enable-caching t))
+(use-package projectile
+  :init
+  (setq projectile-completion-system 'ivy)
+  (setq projectile-enable-caching t)
+  :config
+  (projectile-mode)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
 
 (projectile-mode)
 
@@ -907,7 +928,7 @@ select one"
 
   ;; progress logging
   (setq org-log-done 'time)
-  (setq org-log-into-drawer t) ; use drawer as state chagne note instead of list item 
+  (setq org-log-into-drawer t) ; use drawer as state chagne note instead of list item
 
   ;; Automatically change to DONE when all children are done
   (defun org-summary-todo (n-done n-not-done)
@@ -915,7 +936,7 @@ select one"
     (let (org-log-done org-log-states)   ; turn off logging
       (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
   (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-  
+
   (add-hook 'org-mode-hook
             (lambda ()
               (bind-key* "C-c l" 'org-store-link)
@@ -933,6 +954,8 @@ select one"
             (diminish 'outline-minor-mode)
             (diminish 'visual-line-mode)
             (diminish 'company-mode)))
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -940,15 +963,10 @@ select one"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (org-bullets company-go cmake-mode use-package projectile magit go-eldoc expand-region diminish counsel company ag))))
+    (ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-preview ((t (:foreground "darkgray" :underline t))))
- '(company-preview-common ((t (:inherit company-preview))))
- '(company-tooltip ((t (:background "lightgray" :foreground "black"))))
- '(company-tooltip-common ((((type x)) (:inherit company-tooltip :weight bold)) (t (:inherit company-tooltip))))
- '(company-tooltip-common-selection ((((type x)) (:inherit company-tooltip-selection :weight bold)) (t (:inherit company-tooltip-selection))))
- '(company-tooltip-selection ((t (:background "steelblue" :foreground "white")))))
+ )
