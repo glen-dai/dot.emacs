@@ -946,6 +946,37 @@ select one"
               ;; (org-bullets-mode)
               )))
 
+
+;; * web related
+(use-package web-mode
+  :mode
+  (("\\.html?\\'" . web-mode)
+   ("\\.css?\\'" . web-mode)
+   ("\\.js\\'" . web-mode)
+   )
+  :config
+  (defun my-web-mode-hook ()
+    "Hooks for Web mode."
+    (setq web-mode-markup-indent-offset 2)
+    (setq web-mode-code-indent-offset 2)
+    (setq tab-width 2)
+    (setq web-mode-enable-current-column-highlight t)
+    (setq web-mode-enable-current-element-highlight t)
+    (setq web-mode-enable-auto-closing t) ; auto close tag after </
+    (setq web-mode-enable-css-colorization t)
+    (set (make-local-variable 'company-backends) '(company-css company-web-html company-files))
+    (emmet-mode)
+    (company-mode)
+    (setq web-mode-css-indent-offset 2))
+  (add-hook 'web-mode-hook  'my-web-mode-hook))
+
+(use-package js2-mode
+  :mode
+  (("\\.js\\'" . js2-mode))
+  :config
+  (add-hook 'js2-mode-hook  #'company-mode)
+  )
+
 ;; * postload
 (add-hook 'find-file-hook
           (lambda ()
@@ -963,10 +994,15 @@ select one"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
+    (company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(company-preview ((t (:foreground "darkgray" :underline t))))
+ '(company-preview-common ((t (:inherit company-preview))))
+ '(company-tooltip ((t (:background "lightgray" :foreground "black"))))
+ '(company-tooltip-common ((((type x)) (:inherit company-tooltip :weight bold)) (t (:inherit company-tooltip))))
+ '(company-tooltip-common-selection ((((type x)) (:inherit company-tooltip-selection :weight bold)) (t (:inherit company-tooltip-selection))))
+ '(company-tooltip-selection ((t (:background "steelblue" :foreground "white")))))
