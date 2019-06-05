@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: mydef
+# key: mydef
+# --
+(defun ${1:fun-name} ()
+  (interactive)
+  $0
+  )

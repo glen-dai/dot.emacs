@@ -327,6 +327,14 @@ of modern wide display"
 (hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
 
 
+;; * yasnippet
+(use-package yasnippet
+  :ensure t
+  :config
+  ;; (add-hook 'prog-mode-hook #'yas-minor-mode)
+  (use-package yasnippet-snippets :ensure t)
+  (yas-global-mode 1))
+
 ;; * ag
 (use-package ag
   :config
@@ -994,7 +1002,7 @@ select one"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
+    (yasnippet-snippets yasnippet company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
