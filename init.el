@@ -132,7 +132,15 @@ There are two things you can do about this warning:
     (setq mac-option-modifier 'super)
     (setq mac-function-modifier 'control)
     (setq mac-command-modifier 'meta)))
- (t nil))
+  ((eq window-system 'w32)
+   (progn
+     (use-package nimbus-theme
+       :ensure t
+       :config
+       (load-theme 'nimbus t))
+     (set-face-attribute 'default nil :family "consolas" :height 125 :weight 'bold)
+     (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)))
+  )
 
 (setq linum-format "%d ")
 ;; (global-linum-mode -1)
@@ -309,8 +317,9 @@ of modern wide display"
   (setq projectile-completion-system 'ivy)
   (setq projectile-enable-caching t)
   :config
-  (projectile-mode)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+  (unless (eq window-system 'w32)
+    (projectile-mode)
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)))
 
 (projectile-mode)
 
@@ -325,7 +334,6 @@ of modern wide display"
 
 
 (hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
-
 
 ;; * yasnippet
 (use-package yasnippet
@@ -1000,9 +1008,12 @@ select one"
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("834cbeacb6837f3ddca4a1a7b19b1af3834f36a701e8b15b628cad3d85c970ff" default)))
  '(package-selected-packages
    (quote
-    (yasnippet-snippets yasnippet company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
+    (nimbus-theme hc-zenburn-theme yasnippet-snippets yasnippet company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
