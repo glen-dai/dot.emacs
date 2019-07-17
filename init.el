@@ -30,6 +30,7 @@ There are two things you can do about this warning:
                         ,load-file-name elapsed)))
           t)
 
+(load-library "~/.emacs.d/site-lisp/scratch.el")
 
 (require 'use-package)
 
@@ -308,18 +309,28 @@ of modern wide display"
   ("M-M" . er/expand-region))
 
 (use-package magit
+  :config
+  (defadvice magit-status (around magit-fullscreen activate)
+    (window-configuration-to-register :magit-fullscreen)
+    ad-do-it
+    (delete-other-windows))
+
+  (defadvice magit-mode-quit-window (after magit-restore-screen activate)
+    "Restores the previous window configuration and kills the magit buffer"
+    (jump-to-register :magit-fullscreen))
+
   :bind
   ("C-c g" . magit-status)
   ("C-c C-g" . magit-status))
 
 (use-package projectile
+  :diminish t
   :init
   (setq projectile-completion-system 'ivy)
   (setq projectile-enable-caching t)
   :config
-  (unless (eq window-system 'w32)
-    (projectile-mode)
-    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)))
+  (projectile-mode)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
 
 (projectile-mode)
 
@@ -335,9 +346,11 @@ of modern wide display"
 
 (hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
 
+
 ;; * yasnippet
 (use-package yasnippet
   :ensure t
+  :diminish t
   :config
   ;; (add-hook 'prog-mode-hook #'yas-minor-mode)
   (use-package yasnippet-snippets :ensure t)
@@ -680,6 +693,18 @@ ic ones) declaration and insert current point"
       ;; (princ includes)
       (setq includes (reverse includes)) ; reverse to get right order
       includes))
+
+  (defun switch-cpp-or-header ()
+    (interactive)
+    (let* ((fn (file-name-nondirectory (buffer-file-name)))
+           (base-name (file-name-base fn))
+           (ext (file-name-extension fn)))
+      (message (format "bn(%s) ext(%s)" base-name ext))
+      (if (string-match-p "h" ext)
+          (counsel-find-file (format "%s c" base-name))
+        (counsel-find-file (format "%s h" base-name)))))
+
+  (defalias 'hh 'switch-cpp-or-header)
 
   (defun switch-to-header-or-source ()
     (interactive)
