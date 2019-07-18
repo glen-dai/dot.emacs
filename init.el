@@ -133,15 +133,15 @@ There are two things you can do about this warning:
     (setq mac-option-modifier 'super)
     (setq mac-function-modifier 'control)
     (setq mac-command-modifier 'meta)))
-  ((eq window-system 'w32)
-   (progn
-     (use-package nimbus-theme
-       :ensure t
-       :config
-       (load-theme 'nimbus t))
-     (set-face-attribute 'default nil :family "consolas" :height 125 :weight 'bold)
-     (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)))
-  )
+ ((eq window-system 'w32)
+  (progn
+    (use-package nimbus-theme
+      :ensure t
+      :config
+      (load-theme 'nimbus t))
+    (set-face-attribute 'default nil :family "consolas" :height 125 :weight 'bold)
+    (global-set-key (kbd "C-x C-m") 'toggle-frame-maximized)))
+ )
 
 (setq linum-format "%d ")
 ;; (global-linum-mode -1)
@@ -346,6 +346,9 @@ of modern wide display"
 
 (hook-into-modes (lambda () (linum-mode -1)) #'compilation-mode)
 
+(use-package doom-modeline
+  :ensure t
+  :hook (after-init . doom-modeline-mode))
 
 ;; * yasnippet
 (use-package yasnippet
@@ -1038,7 +1041,7 @@ select one"
     ("834cbeacb6837f3ddca4a1a7b19b1af3834f36a701e8b15b628cad3d85c970ff" default)))
  '(package-selected-packages
    (quote
-    (nimbus-theme hc-zenburn-theme yasnippet-snippets yasnippet company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package with-editor))))
+    (yasnippet-snippets yasnippet doom-modeline nimbus-theme hc-zenburn-theme company-web emmet-mode js2-mode web-mode company-go ag async cmake-mode company counsel dash diminish expand-region git-commit go-eldoc go-mode ivy magit projectile snazzy-theme swiper transient use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
